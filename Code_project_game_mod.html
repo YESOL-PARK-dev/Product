@@ -1,0 +1,287 @@
+<!doctype html>
+
+<html>
+<head>
+<meta charset = "UTF-8">
+<title>JavaScript GAME APP</title>
+<style>
+canvas {
+    border: 1px solid black;
+  }
+#startground  { position: fixed; top: 10px; left: 10px; }
+
+#restart  { position: fixed; top: 230px; left: 165px; }
+
+#realdie { position: fixed; top: 230px; left: 115px; }
+
+#hakjum { position: fixed; top: 60px; left: 350px;
+        font-size: 400px
+}
+</style>
+
+<script type="text/javascript">
+    var canvas;
+    var ctx;
+    var dx = 10;
+    var chx = 150;
+    var chy = 430;
+    var WIDTH = 300;
+    var HEIGHT = 500;
+    var scy = 5; // 학점 표시 y좌표
+    var sc = [];
+    var viewsc=70; // 시작학점 70(C)
+    var trap=495;
+    var thd;
+    var keys = [];
+    var state = "playing";
+
+
+    var img = new Image();
+    img.src = "person.png"; // player image
+    var balla = new Image();
+    balla.src = "plus.png" // plus ball image
+    var ballb = new Image();
+    ballb.src = "minus.png" // minus ball image
+    var ballc = new Image();
+    ballc.src = "F.png" // F ball image
+
+    // var background = new Image();
+    // background.src = "background.png";
+    
+    var close = new Image();
+    close.src = "close.png"; // close or not image
+    var realclose = new Image();
+    realclose.src = "realclose.png"; // GAME OVER image
+    var win = new Image();
+    win.src = "win.png"; // GAME CLEAR image
+    
+    // var what = new Image();
+    // what.src = "what.png";
+    
+    var startground = new Image();
+    startground.src = "startground.png"; // GAME MAIN image
+                                              
+
+    sc.push(balla);
+    sc.push(balla);
+    sc.push(ballb);
+    sc.push(ballb);
+    sc.push(ballc);
+
+    var arrsc = new Array();
+
+    function preinit(){ // if press 'START' button
+        document.all.start.style.display='none';
+        var startground = document.getElementById("startground");
+        var parent = startground.parentNode;
+        parent.removeChild(startground);
+         init();
+    }
+
+    function init() {
+        ctx = document.getElementById("canvas").getContext("2d");
+        document.getElementById("restart").style.visibility="hidden"
+        document.getElementById("realdie").style.visibility="hidden"        
+    //     for(var i=0 ; i<700; i++){
+    //     setTimeout(drawWhat,1000/300);
+    // }
+        lastTime = Date.now();
+        // viewsc = 70;
+        thd=setInterval(loop, 1000 /30);
+
+    }
+
+    function loop() {
+        var now = Date.now();
+        var elapsed = Math.floor(now - lastTime) || 1;
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      
+            // drawBackground();
+            drawHero(elapsed);
+            drawScore(elapsed);
+            updateScore();         
+            lastTime = now;
+    }
+
+    // function drawWhat() {
+    //         ctx.drawImage(what, 0, 0,300,500);
+    // }
+
+    // function drawBackground() {
+    //         ctx.drawImage(background, 0, 0,300,500);
+    // }
+
+    function drawHero(elapsed) {
+        var direction = 0;
+
+        if (keys[37]) {
+            direction = -1;
+        }
+        if (keys[39]) {
+            direction = +1;
+        }
+        chx += direction * 2 * (elapsed / 10);
+
+        if(chx<1){
+                chx =1;
+        }
+        else if(chx >272){
+            chx=272;
+        }
+        ctx.drawImage(img, chx, chy);
+    }
+
+
+    function drawScore(elapsed) {
+        if(arrsc.length<22){
+        arrsc[arrsc.length] = new Score(drawsc(), Math.floor(Math.random() * 285), -27);
+        }        
+        for (var i = 0; i < arrsc.length; i++) {
+            arrsc[i].speed = arrsc[i].speed + Math.random();
+            arrsc[i].y = arrsc[i].y + arrsc[i].speed;
+            if(arrsc[i].y>=490){
+                arrsc[i].img = drawsc();
+                arrsc[i].x = Math.floor(Math.random() * 265);
+                arrsc[i].y = -27;
+                arrsc[i].speed = 0;
+            }
+            ctx.drawImage(arrsc[i].img, arrsc[i].x, arrsc[i].y);  
+        }      
+    }
+
+    function Score(arrimg, arrx, arry) {
+        this.img = arrimg;
+        this.x = arrx;
+        this.y = arry;
+        this.speed = 0;
+
+    }
+
+    function rect(x, y, w, h) { //화면 그리는 함수
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    function doKeyDown(ev) { //키보드 이벤트
+        keys[ev.keyCode] = true;
+
+        // if (ev.keyCode == 89) {
+        //     alert("test");
+        // }
+
+    }
+
+    function doKeyUp(ev) { //키보드 이벤트
+        keys[ev.keyCode] = false;
+    }
+
+    function updateScore(){
+        for (var i = 0; i < arrsc.length; i++) {
+            var dist;
+            dist = distsq(chx,chy,arrsc[i].x, arrsc[i].y);
+            if(dist<200){
+                switch(arrsc[i].img.getAttribute('src')){
+                    case "plus.png" :
+                    viewsc += 4;
+                    arrsc[i].y=490;
+                    console.log(viewsc);
+                    printHakjum(viewsc);
+                    stateTest();
+                    break;                    
+
+                    case "minus.png":
+                    viewsc -= 2;
+                    arrsc[i].y=490;
+                    console.log(viewsc);
+                    printHakjum(viewsc);
+                    stateTest();
+                    break;
+
+                    default :
+                    console.log(viewsc);
+                    viewsc = 0;
+                    printHakjum(viewsc);
+                    stateTest();
+                    
+                }
+            }
+        }
+    }
+
+    function printHakjum(hakjum){
+        if(hakjum >= 95)
+            document.getElementById("hakjum").innerHTML ="A+";
+        else if (hakjum >=90)
+            document.getElementById("hakjum").innerHTML ="A";
+        else if (hakjum >= 85)
+            document.getElementById("hakjum").innerHTML ="B+";
+        else if (hakjum >= 80)
+            document.getElementById("hakjum").innerHTML ="B";
+        else if (hakjum >= 75)
+            document.getElementById("hakjum").innerHTML ="C+";
+        else if (hakjum >= 70)
+            document.getElementById("hakjum").innerHTML ="C";
+        else if (hakjum >= 65)
+            document.getElementById("hakjum").innerHTML ="D+";
+        else if (hakjum >= 60)
+            document.getElementById("hakjum").innerHTML ="D";
+        else if (hakjum <=50)
+            document.getElementById("hakjum").innerHTML ="F";
+    }
+
+    function stateTest(){
+        if(viewsc<=50){
+        clearInterval(thd);
+        ctx.drawImage(close,0,0,300,500); 
+        document.getElementById("restart").style.visibility="visible"
+        document.getElementById("realdie").style.visibility="visible"
+       }
+      else if (viewsc>=95) {
+        clearInterval(thd);
+        ctx.drawImage(win,0,0,300,500);  
+      };
+    }
+
+     function distsq(x1, y1, x2, y2){
+        return (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2);
+    }
+
+    function drawsc() {
+        return sc[Math.floor(Math.random() * 5)];
+    }
+
+    window.addEventListener('keydown', doKeyDown, true);
+    window.addEventListener('keyup', doKeyUp, true);
+
+    function lastclose(){
+         document.getElementById("restart").style.visibility="hidden"
+        document.getElementById("realdie").style.visibility="hidden"
+        ctx.drawImage(realclose,0,0,300,500);
+    }
+ 
+</script>
+
+<body>
+    
+    <canvas id="canvas" width="300" height="500">        
+    이 브라우저는 HTML5의 canvas 요소를 지원하지 않습니다.
+    </canvas> 
+    <span id="hakjum"> </span>
+    <form>
+        &nbsp&nbsp&nbsp&nbsp
+        &nbsp&nbsp&nbsp&nbsp
+        &nbsp&nbsp&nbsp&nbsp
+        &nbsp&nbsp&nbsp&nbsp
+        &nbsp&nbsp&nbsp&nbsp        
+        <input id="start" type="button" onclick="preinit()" value="START"  />
+        <input id="realdie" type="button" onclick="lastclose()" value="Yes"/>
+        <input id="restart" type="button" onclick="location.reload()" value="No"  />
+
+     </form>
+
+   <img src="startground.png" align="top" id="startground" width="280px" height="480px">
+</body>
+</html>
